@@ -1,13 +1,13 @@
 {
-  "name": "serverless-authorizer",
+  "name": "serverless-custom-authorizer",
   "version": "1.0.0",
-  "description": "Example of a service that uses API Gateway custom authorizer feature to authorize your endpoints.",
+  "description": "Example of a serverless service that uses API Gateway custom authorizer to authorize your endpoints, and can custom deny message.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "serverless-offline": "^3.25.8"
   }
