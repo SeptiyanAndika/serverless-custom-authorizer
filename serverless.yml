@@ -1,0 +1,89 @@
+service: serverless-custom-authorizer
+
+provider:
+  name: aws
+  runtime: nodejs8.10
+
+  stage: dev
+  region: us-east-1
+  timeout: 300
+  memorySize: 1024
+
+functions:
+  auth:
+    handler: index.auth
+    
+  private:
+    handler: index.private
+    events:
+      - http:
+          path: private
+          method: get
+          authorizer: auth   #https://serverless.com/framework/docs/providers/aws/events/apigateway/#http-endpoints-with-custom-authorizers
+          cors: true
+
+  public:
+    handler: index.public
+    events:
+      - http:
+          path: public
+          method: get
+          cors: true
+
+#https://github.com/serverless/serverless/issues/3896#issuecomment-326721971
+#https://github.com/serverless/examples/blob/master/aws-node-auth0-custom-authorizers-api/serverless.yml#L33
+resources:
+  Resources:
+    ExpiredGatewayResponse:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseType: EXPIRED_TOKEN
+        ResponseTemplates:
+          application/json: |
+            {
+              "success":false,
+              "message":"Token Expired"
+            }
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '401'
+    AuthFailureGatewayResponse:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseTemplates:
+            application/json: |
+              {
+                "success":false,
+                "message":"$context.error.messageString"
+              }
+        ResponseType: UNAUTHORIZED
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '401'
+    DenyFailureGatewayResponse:
+      Type: 'AWS::ApiGateway::GatewayResponse'
+      Properties:
+        ResponseParameters:
+          gatewayresponse.header.Access-Control-Allow-Origin: "'*'"
+          gatewayresponse.header.Access-Control-Allow-Headers: "'*'"
+        ResponseTemplates:
+            #https://stackoverflow.com/a/49806967/10212963
+            application/json: |
+              {
+                "success":false,
+                "message":"$context.authorizer.customErrorMessage"
+              }
+        ResponseType: ACCESS_DENIED
+        RestApiId:
+          Ref: 'ApiGatewayRestApi'
+        StatusCode: '403'
+    
+
+plugins:
+  - serverless-offline
