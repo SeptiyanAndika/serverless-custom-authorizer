@@ -60,7 +60,7 @@ resources:
             application/json: |
               {
                 "success":false,
-                "message":"$context.error.messageString"
+                "message":$context.error.messageString
               }
         ResponseType: UNAUTHORIZED
         RestApiId:
